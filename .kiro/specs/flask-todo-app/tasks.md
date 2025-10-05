@@ -10,7 +10,7 @@
 
 ## Tasks
 
-- [ ] 1. Set up project structure and dependencies
+- [x] 1. Set up project structure and dependencies
   - Create Flask application directory structure with app/, static/, and templates/ folders
   - Write requirements.txt with Flask, Flask-SQLAlchemy, Flask-Login, and Flask-WTF dependencies
   - Create app.py as the main application entry point
