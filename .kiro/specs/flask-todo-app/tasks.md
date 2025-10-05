@@ -101,7 +101,7 @@
     - _Requirements: 6.3, 7.2, 9.3, 9.4_
 
 - [ ] 5. Create HTML templates and user interface
-  - [ ] 5.1 Create base template (app/templates/base.html)
+  - [x] 5.1 Create base template (app/templates/base.html)
     - Implement responsive HTML5 structure with meta tags
     - Add CSS framework links and custom stylesheet
     - Create navigation with user context (login/logout buttons)
@@ -109,14 +109,14 @@
     - Show username and logout option when authenticated
     - _Requirements: 5.1, 5.2, 5.3, 8.1_
 
-  - [ ] 5.2 Create authentication templates
+  - [x] 5.2 Create authentication templates
     - Create login.html with username/password form and registration link
     - Create register.html with username, password, and confirmation fields
     - Include proper form validation and error message display
     - Add navigation links between login and registration pages
     - _Requirements: 6.2, 7.1, 7.5_
 
-  - [ ] 5.3 Create protected main page template (app/templates/index.html)
+  - [x] 5.3 Create protected main page template (app/templates/index.html)
     - Display welcome message with current user's username
     - Show user-specific todo list with completion status indicators
     - Implement add new todo form with validation
@@ -124,7 +124,7 @@
     - Show empty state message when user has no todos
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 3.2, 4.1, 5.2, 9.2_
 
-  - [ ] 5.4 Write integration tests for template rendering
+  - [x] 5.4 Write integration tests for template rendering
     - Test authentication template rendering and form functionality
     - Test protected template rendering with user context
     - Verify CSRF protection and user-specific data display

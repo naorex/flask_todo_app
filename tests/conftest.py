@@ -20,7 +20,7 @@ def app():
         {
             "TESTING": True,
             "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
-            "WTF_CSRF_ENABLED": False,  # Disable CSRF for testing
+            "WTF_CSRF_ENABLED": False,  # Disable CSRF for easier testing
             "SECRET_KEY": "test-secret-key",
         }
     )

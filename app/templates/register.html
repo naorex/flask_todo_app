@@ -1,23 +1,86 @@
-{% extends "base.html" %} {% block content %}
-<h1>Register</h1>
-<form method="POST">
-  {{ form.hidden_tag() }}
-  <div>
-    {{ form.username.label }} {{ form.username() }} {% for error in form.username.errors %}
-    <span class="error">{{ error }}</span>
-    {% endfor %}
+{% extends "base.html" %} {% block title %}Register - Flask Todo App{% endblock %} {% block content %}
+<div class="auth-container">
+  <div class="card auth-card">
+    <div class="card-body">
+      <div class="auth-header">
+        <h2><i class="fas fa-user-plus"></i> Register</h2>
+        <p class="text-muted">Create your account to start managing todos</p>
+      </div>
+
+      <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+
+        <!-- Username Field -->
+        <div class="mb-3">
+          {{ form.username.label(class="form-label") }} {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""),
+          placeholder="Choose a username") }} {% if form.username.errors %}
+          <div class="invalid-feedback">{% for error in form.username.errors %} {{ error }} {% endfor %}</div>
+          {% else %}
+          <div class="form-text">Username must be 3-80 characters long</div>
+          {% endif %}
+        </div>
+
+        <!-- Password Field -->
+        <div class="mb-3">
+          {{ form.password.label(class="form-label") }} {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
+          placeholder="Create a password") }} {% if form.password.errors %}
+          <div class="invalid-feedback">{% for error in form.password.errors %} {{ error }} {% endfor %}</div>
+          {% else %}
+          <div class="form-text">Password must be at least 6 characters long</div>
+          {% endif %}
+        </div>
+
+        <!-- Password Confirmation Field -->
+        <div class="mb-3">
+          {{ form.password_confirm.label(class="form-label") }} {{ form.password_confirm(class="form-control" + (" is-invalid" if
+          form.password_confirm.errors else ""), placeholder="Confirm your password") }} {% if form.password_confirm.errors %}
+          <div class="invalid-feedback">{% for error in form.password_confirm.errors %} {{ error }} {% endfor %}</div>
+          {% else %}
+          <div class="form-text">Re-enter your password to confirm</div>
+          {% endif %}
+        </div>
+
+        <!-- Submit Button -->
+        <div class="d-grid">{{ form.submit(class="btn btn-success btn-lg") }}</div>
+      </form>
+
+      <!-- Navigation Links -->
+      <div class="auth-links">
+        <p class="mb-0">
+          Already have an account?
+          <a href="{{ url_for('auth.login') }}"> <i class="fas fa-sign-in-alt"></i> Login here </a>
+        </p>
+      </div>
+    </div>
   </div>
-  <div>
-    {{ form.password.label }} {{ form.password() }} {% for error in form.password.errors %}
-    <span class="error">{{ error }}</span>
-    {% endfor %}
-  </div>
-  <div>
-    {{ form.password_confirm.label }} {{ form.password_confirm() }} {% for error in form.password_confirm.errors %}
-    <span class="error">{{ error }}</span>
-    {% endfor %}
-  </div>
-  <div>{{ form.submit() }}</div>
-</form>
-<p><a href="{{ url_for('auth.login') }}">Login</a></p>
+</div>
+
+<script>
+  // Add form validation feedback and password matching
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.querySelector('form');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const passwordField = document.getElementById('password');
+    const confirmField = document.getElementById('password_confirm');
+
+    // Form submission loading state
+    form.addEventListener('submit', function () {
+      submitBtn.classList.add('btn-loading');
+      submitBtn.disabled = true;
+    });
+
+    // Real-time password confirmation validation
+    if (confirmField) {
+      confirmField.addEventListener('input', function () {
+        if (passwordField.value !== confirmField.value) {
+          confirmField.classList.add('is-invalid');
+          confirmField.classList.remove('is-valid');
+        } else if (confirmField.value.length > 0) {
+          confirmField.classList.remove('is-invalid');
+          confirmField.classList.add('is-valid');
+        }
+      });
+    }
+  });
+</script>
 {% endblock %}

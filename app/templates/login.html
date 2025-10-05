@@ -1,18 +1,56 @@
-{% extends "base.html" %} {% block content %}
-<h1>Login</h1>
-<form method="POST">
-  {{ form.hidden_tag() }}
-  <div>
-    {{ form.username.label }} {{ form.username() }} {% for error in form.username.errors %}
-    <span class="error">{{ error }}</span>
-    {% endfor %}
+{% extends "base.html" %} {% block title %}Login - Flask Todo App{% endblock %} {% block content %}
+<div class="auth-container">
+  <div class="card auth-card">
+    <div class="card-body">
+      <div class="auth-header">
+        <h2><i class="fas fa-sign-in-alt"></i> Login</h2>
+        <p class="text-muted">Sign in to access your todos</p>
+      </div>
+
+      <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+
+        <!-- Username Field -->
+        <div class="mb-3">
+          {{ form.username.label(class="form-label") }} {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""),
+          placeholder="Enter your username") }} {% if form.username.errors %}
+          <div class="invalid-feedback">{% for error in form.username.errors %} {{ error }} {% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <!-- Password Field -->
+        <div class="mb-3">
+          {{ form.password.label(class="form-label") }} {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
+          placeholder="Enter your password") }} {% if form.password.errors %}
+          <div class="invalid-feedback">{% for error in form.password.errors %} {{ error }} {% endfor %}</div>
+          {% endif %}
+        </div>
+
+        <!-- Submit Button -->
+        <div class="d-grid">{{ form.submit(class="btn btn-primary btn-lg") }}</div>
+      </form>
+
+      <!-- Navigation Links -->
+      <div class="auth-links">
+        <p class="mb-0">
+          Don't have an account?
+          <a href="{{ url_for('auth.register') }}"> <i class="fas fa-user-plus"></i> Register here </a>
+        </p>
+      </div>
+    </div>
   </div>
-  <div>
-    {{ form.password.label }} {{ form.password() }} {% for error in form.password.errors %}
-    <span class="error">{{ error }}</span>
-    {% endfor %}
-  </div>
-  <div>{{ form.submit() }}</div>
-</form>
-<p><a href="{{ url_for('auth.register') }}">Register</a></p>
+</div>
+
+<script>
+  // Add form validation feedback
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.querySelector('form');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    form.addEventListener('submit', function () {
+      submitBtn.classList.add('btn-loading');
+      submitBtn.disabled = true;
+    });
+  });
+</script>
 {% endblock %}
