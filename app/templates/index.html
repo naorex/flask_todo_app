@@ -1,0 +1,39 @@
+{% extends "base.html" %} {% block content %}
+<h1>Welcome, {{ current_user.username }}!</h1>
+
+<form method="POST" action="{{ url_for('main.add_todo') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <input type="text" name="description" placeholder="Add a new todo..." required />
+  <button type="submit">Add Todo</button>
+</form>
+
+{% if todos %}
+<ul>
+  {% for todo in todos %}
+  <li>
+    {% if todo.completed %}
+    <span class="completed">✓ {{ todo.description }}</span>
+    {% else %}
+    <span>○ {{ todo.description }}</span>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('main.toggle_todo', todo_id=todo.id) }}" style="display: inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit">{% if todo.completed %}Mark Incomplete{% else %}Mark Complete{% endif %}</button>
+    </form>
+
+    <form method="POST" action="{{ url_for('main.delete_todo', todo_id=todo.id) }}" style="display: inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit">Delete</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No todos yet. Add one above!</p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('auth.logout') }}">
+  <button type="submit">Logout</button>
+</form>
+{% endblock %}

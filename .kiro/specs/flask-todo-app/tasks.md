@@ -65,36 +65,36 @@
     - Redirect to login page after logout
     - _Requirements: 8.2, 8.3_
 
-- [ ] 4. Create protected todo management routes
-  - [ ] 4.1 Implement protected main page route (GET /)
+- [x] 4. Create protected todo management routes
+  - [x] 4.1 Implement protected main page route (GET /)
     - Add @login_required decorator to protect route
     - Query only current user's todos from database
     - Handle empty state when user has no todos
     - Redirect unauthenticated users to login page
     - _Requirements: 1.1, 1.2, 1.3, 6.1, 9.2_
 
-  - [ ] 4.2 Implement protected add todo route (POST /add)
+  - [x] 4.2 Implement protected add todo route (POST /add)
     - Add @login_required decorator and user ownership
     - Associate new todos with current user ID
     - Validate input and create user-specific todo
     - Redirect to main page after successful creation
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 9.1, 9.4_
 
-  - [ ] 4.3 Implement protected toggle completion route (POST /toggle/<id>)
+  - [x] 4.3 Implement protected toggle completion route (POST /toggle/<id>)
     - Add @login_required decorator and ownership verification
     - Verify user owns the todo before allowing toggle
     - Update completion status and redirect to main page
     - Handle unauthorized access attempts
     - _Requirements: 3.1, 3.2, 3.3, 9.3, 9.4_
 
-  - [ ] 4.4 Implement protected delete todo route (POST /delete/<id>)
+  - [x] 4.4 Implement protected delete todo route (POST /delete/<id>)
     - Add @login_required decorator and ownership verification
     - Verify user owns the todo before allowing deletion
     - Delete todo and redirect to main page
     - Handle unauthorized access attempts
     - _Requirements: 4.1, 4.2, 4.3, 9.3, 9.4_
 
-  - [ ] 4.5 Write unit tests for authentication and todo routes
+  - [x] 4.5 Write unit tests for authentication and todo routes
     - Test authentication flows and session management
     - Test protected route access control
     - Test user-specific todo operations
