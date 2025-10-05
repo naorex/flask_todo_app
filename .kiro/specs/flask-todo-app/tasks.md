@@ -17,7 +17,7 @@
   - _Requirements: 10.1, 10.4_
 
 - [ ] 2. Implement core Flask application with authentication
-  - [ ] 2.1 Create Flask app factory in app/**init**.py
+  - [x] 2.1 Create Flask app factory in app/**init**.py
     - Initialize Flask application with SQLAlchemy, Flask-Login, and security configurations
     - Configure database URI and secret key from environment variables
     - Set up LoginManager for session management
