@@ -13,15 +13,21 @@ The application follows a layered architecture:
 │           Web Browser               │
 └─────────────────────────────────────┘
                     │
-                    │ HTTP Requests
+                    │ HTTP Requests (with sessions)
                     ▼
 ┌─────────────────────────────────────┐
 │         Flask Application           │
 │  ┌─────────────────────────────────┐│
-│  │         Routes/Views            ││
+│  │    Authentication Layer         ││
+│  │    (Flask-Login, Sessions)      ││
 │  └─────────────────────────────────┘│
 │  ┌─────────────────────────────────┐│
-│  │         Models (ORM)            ││
+│  │         Routes/Views            ││
+│  │    (Protected & Public)         ││
+│  └─────────────────────────────────┘│
+│  ┌─────────────────────────────────┐│
+│  │      Models (ORM)               ││
+│  │    (User, Todo with relations)  ││
 │  └─────────────────────────────────┘│
 └─────────────────────────────────────┘
                     │
@@ -29,12 +35,15 @@ The application follows a layered architecture:
                     ▼
 ┌─────────────────────────────────────┐
 │         SQLite Database             │
+│      (Users & User-specific Todos)  │
 └─────────────────────────────────────┘
 ```
 
 ### Technology Stack
 
 - **Backend Framework**: Flask (Python web framework)
+- **Authentication**: Flask-Login (session management)
+- **Password Hashing**: Werkzeug security utilities
 - **Database**: SQLite (lightweight, file-based database)
 - **ORM**: Flask-SQLAlchemy (database abstraction layer)
 - **Templating**: Jinja2 (Flask's default template engine)
@@ -49,20 +58,34 @@ The application follows a layered architecture:
 flask-todo-app/
 ├── app/
 │   ├── __init__.py          # Flask app factory
-│   ├── models.py            # Database models
+│   ├── models.py            # Database models (User, Todo)
+│   ├── auth.py              # Authentication utilities
 │   ├── routes.py            # Route handlers
 │   └── templates/           # HTML templates
-│       ├── base.html        # Base template
-│       └── index.html       # Main todo list page
+│       ├── base.html        # Base template with auth context
+│       ├── login.html       # Login form
+│       ├── register.html    # Registration form
+│       └── index.html       # Main todo list page (protected)
 ├── static/
 │   └── style.css            # CSS styles
 ├── app.py                   # Application entry point
-├── requirements.txt         # Python dependencies
+├── requirements.txt         # Python dependencies (includes Flask-Login)
 ├── Dockerfile              # Container definition
 └── docker-compose.yml      # Container orchestration
 ```
 
-### 2. Database Model
+### 2. Database Models
+
+**User Model**:
+
+```python
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(120), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    todos = db.relationship('Todo', backref='user', lazy=True, cascade='all, delete-orphan')
+```
 
 **Todo Model**:
 
@@ -72,16 +95,29 @@ class Todo(db.Model):
     description = db.Column(db.String(200), nullable=False)
     completed = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 ```
 
 ### 3. API Endpoints
 
-| Method | Endpoint       | Description            | Requirements           |
-| ------ | -------------- | ---------------------- | ---------------------- |
-| GET    | `/`            | Display all todos      | Req 1.1, 1.2, 1.3      |
-| POST   | `/add`         | Create new todo        | Req 2.1, 2.2, 2.3, 2.4 |
-| POST   | `/toggle/<id>` | Toggle todo completion | Req 3.1, 3.2, 3.3      |
-| POST   | `/delete/<id>` | Delete todo item       | Req 4.1, 4.2, 4.3      |
+#### Authentication Endpoints
+
+| Method | Endpoint    | Description               | Requirements           |
+| ------ | ----------- | ------------------------- | ---------------------- |
+| GET    | `/login`    | Display login form        | Req 6.2                |
+| POST   | `/login`    | Process login             | Req 6.3, 6.4, 6.5      |
+| GET    | `/register` | Display registration form | Req 7.1                |
+| POST   | `/register` | Process registration      | Req 7.2, 7.3, 7.4, 7.5 |
+| POST   | `/logout`   | Log out user              | Req 8.2, 8.3           |
+
+#### Todo Management Endpoints (Protected)
+
+| Method | Endpoint       | Description            | Requirements                |
+| ------ | -------------- | ---------------------- | --------------------------- |
+| GET    | `/`            | Display user's todos   | Req 1.1, 1.2, 1.3, 9.2      |
+| POST   | `/add`         | Create new todo        | Req 2.1, 2.2, 2.3, 2.4, 9.1 |
+| POST   | `/toggle/<id>` | Toggle todo completion | Req 3.1, 3.2, 3.3, 9.4      |
+| POST   | `/delete/<id>` | Delete todo item       | Req 4.1, 4.2, 4.3, 9.4      |
 
 ### 4. Frontend Components
 
@@ -89,18 +125,72 @@ class Todo(db.Model):
 
 - Common HTML structure
 - CSS styling links
-- Navigation elements
+- Navigation elements with user context
 - Flash message display area
+- Logout button (when authenticated)
 
-**Main Page (index.html)**:
+**Login Page (login.html)**:
 
-- Todo list display
+- Username and password input fields
+- Login form submission
+- Link to registration page
+- Error message display
+
+**Registration Page (register.html)**:
+
+- Username, password, and confirm password fields
+- Registration form submission
+- Link to login page
+- Validation error display
+
+**Main Page (index.html)** (Protected):
+
+- Welcome message with username
+- Todo list display (user-specific)
 - Add new todo form
 - Toggle completion buttons
 - Delete buttons
 - Empty state message
 
+### 5. Authentication Components
+
+**Flask-Login Integration**:
+
+- `LoginManager` configuration for session management
+- `UserMixin` implementation for User model
+- `@login_required` decorator for protected routes
+- `current_user` context for templates
+
+**Password Security**:
+
+- `werkzeug.security.generate_password_hash()` for password hashing
+- `werkzeug.security.check_password_hash()` for password verification
+- Salt-based hashing with secure defaults
+
+**Session Management**:
+
+- Flask sessions for user authentication state
+- Session timeout configuration
+- Secure session cookies (HTTPOnly, Secure flags)
+- Remember me functionality (optional)
+
+**Route Protection**:
+
+- Authentication middleware for protected routes
+- Automatic redirect to login for unauthenticated users
+- User context injection into templates
+- Authorization checks for user-specific resources
+
 ## Data Models
+
+### User Entity
+
+| Field         | Type        | Constraints                 | Description           |
+| ------------- | ----------- | --------------------------- | --------------------- |
+| id            | Integer     | Primary Key, Auto-increment | Unique identifier     |
+| username      | String(80)  | Not Null, Unique            | User login name       |
+| password_hash | String(120) | Not Null                    | Hashed password       |
+| created_at    | DateTime    | Default: UTC Now            | Account creation time |
 
 ### Todo Entity
 
@@ -110,59 +200,115 @@ class Todo(db.Model):
 | description | String(200) | Not Null                    | Task description   |
 | completed   | Boolean     | Not Null, Default: False    | Completion status  |
 | created_at  | DateTime    | Default: UTC Now            | Creation timestamp |
+| user_id     | Integer     | Foreign Key, Not Null       | Owner user ID      |
 
 ### Database Schema
 
 ```sql
+CREATE TABLE user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username VARCHAR(80) NOT NULL UNIQUE,
+    password_hash VARCHAR(120) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE todo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     description VARCHAR(200) NOT NULL,
     completed BOOLEAN NOT NULL DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    user_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user (id)
 );
 ```
+
+### Entity Relationships
+
+- **User** has many **Todo** items (One-to-Many)
+- **Todo** belongs to one **User** (Many-to-One)
+- Cascade delete: When a user is deleted, all their todos are deleted
 
 ## Error Handling
 
 ### Application-Level Error Handling
 
-1. **Form Validation Errors**:
+1. **Authentication Errors**:
+   - Invalid login credentials → Flash error message, stay on login page
+   - Username already exists → Flash error message, stay on registration page
+   - Password mismatch → Flash error message, stay on registration page
+   - Unauthorized access → Redirect to login page with message
+
+2. **Form Validation Errors**:
    - Empty todo description → Flash error message, stay on page
+   - Empty username/password → Flash error message, stay on form
    - Invalid input → Sanitize and validate before processing
 
-2. **Database Errors**:
+3. **Database Errors**:
    - Connection issues → Display user-friendly error page
    - Constraint violations → Log error, show generic message
+   - User not found → Handle gracefully with appropriate redirect
 
-3. **HTTP Errors**:
-   - 404 Not Found → Custom error page for missing todos
+4. **HTTP Errors**:
+   - 401 Unauthorized → Redirect to login page
+   - 403 Forbidden → Access denied page
+   - 404 Not Found → Custom error page for missing todos/users
    - 500 Internal Server Error → Generic error page with logging
 
 ### Input Validation
 
+**Authentication Input Validation**:
+
+- Username: Required, 3-80 characters, alphanumeric and underscore only
+- Password: Required, minimum 6 characters, no maximum (hashed)
+- Password confirmation: Must match password field
+- Username uniqueness: Check against existing users
+
+**Todo Input Validation**:
+
 - Todo description: Required, max 200 characters, strip whitespace
 - Todo ID: Must be valid integer for toggle/delete operations
-- CSRF protection using Flask-WTF (if forms become more complex)
+- User ownership: Verify user owns the todo before operations
+
+**Security Validation**:
+
+- CSRF protection using Flask-WTF for all forms
+- Input sanitization to prevent XSS attacks
+- SQL injection prevention through ORM usage
 
 ## Testing Strategy
 
 ### Unit Tests
 
-- Model validation and database operations
+- User model validation and password hashing
+- Todo model validation and user relationships
+- Authentication utility functions
 - Route handler logic and response codes
 - Form validation and error handling
 
 ### Integration Tests
 
-- End-to-end workflow testing
+- User registration and login workflows
+- Session management and logout functionality
+- Protected route access control
+- User-specific todo operations
+- End-to-end authentication flows
 - Database persistence verification
-- Template rendering validation
+- Template rendering with user context
+
+### Security Tests
+
+- Password hashing and verification
+- Session security and timeout
+- Unauthorized access prevention
+- CSRF protection validation
+- Input sanitization verification
 
 ### Manual Testing
 
 - Cross-browser compatibility
 - Responsive design verification
 - User experience validation
+- Authentication flow usability
 
 ## Docker Configuration
 
