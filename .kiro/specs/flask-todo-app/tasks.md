@@ -1,5 +1,15 @@
 # Implementation Plan
 
+## Environment Requirements
+
+**IMPORTANT**: All tasks must be executed using Python uv virtual environment. Before starting any task, ensure you have:
+
+- Activated the virtual environment: `uv venv --python 3.13` (or appropriate Python version)
+- Use `uv add` for package installations instead of regular pip
+- Use `uv run python` for running Python scripts within the virtual environment
+
+## Tasks
+
 - [ ] 1. Set up project structure and dependencies
   - Create Flask application directory structure with app/, static/, and templates/ folders
   - Write requirements.txt with Flask, Flask-SQLAlchemy, and Flask-WTF dependencies
