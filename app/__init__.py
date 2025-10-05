@@ -62,8 +62,10 @@ def create_app():
         )
         return response
 
-    # Register blueprints (will be implemented in later tasks)
-    # from app.routes import main
-    # app.register_blueprint(main)
+    # Register blueprints
+    from app.routes import auth, main
+
+    app.register_blueprint(auth)
+    app.register_blueprint(main)
 
     return app

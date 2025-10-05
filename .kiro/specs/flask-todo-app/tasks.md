@@ -16,7 +16,7 @@
   - Create app.py as the main application entry point
   - _Requirements: 10.1, 10.4_
 
-- [ ] 2. Implement core Flask application with authentication
+- [x] 2. Implement core Flask application with authentication
   - [x] 2.1 Create Flask app factory in app/**init**.py
     - Initialize Flask application with SQLAlchemy, Flask-Login, and security configurations
     - Configure database URI and secret key from environment variables
@@ -38,14 +38,14 @@
     - Test model validation and database persistence
     - _Requirements: 6.3, 7.2, 9.1_
 
-- [ ] 3. Implement authentication routes and utilities
-  - [ ] 3.1 Create authentication utilities in app/auth.py
+- [x] 3. Implement authentication routes and utilities
+  - [x] 3.1 Create authentication utilities in app/auth.py
     - Implement user loader function for Flask-Login
     - Create password hashing and verification utilities
     - Add user authentication helper functions
     - _Requirements: 6.3, 6.5, 7.2_
 
-  - [ ] 3.2 Implement registration route (GET/POST /register) in app/routes.py
+  - [x] 3.2 Implement registration route (GET/POST /register) in app/routes.py
     - Create registration form with username, password, and confirmation fields
     - Validate username uniqueness and password requirements
     - Hash password and create new user account
@@ -53,14 +53,14 @@
     - Display validation errors for invalid input
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-  - [ ] 3.3 Implement login route (GET/POST /login)
+  - [x] 3.3 Implement login route (GET/POST /login)
     - Create login form with username and password fields
     - Authenticate user credentials against database
     - Create user session and redirect to main page on success
     - Display error message for invalid credentials
     - _Requirements: 6.2, 6.3, 6.4, 6.5_
 
-  - [ ] 3.4 Implement logout route (POST /logout)
+  - [x] 3.4 Implement logout route (POST /logout)
     - End user session using Flask-Login logout_user()
     - Redirect to login page after logout
     - _Requirements: 8.2, 8.3_
