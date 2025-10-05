@@ -32,7 +32,7 @@
     - Add input validation for usernames and todo descriptions
     - _Requirements: 6.1, 7.1, 9.1, 1.3, 2.3, 2.4_
 
-  - [ ] 2.3 Write unit tests for User and Todo models
+  - [x] 2.3 Write unit tests for User and Todo models
     - Test user creation, password hashing, and authentication
     - Test todo model with user relationships
     - Test model validation and database persistence

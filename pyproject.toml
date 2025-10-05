@@ -9,4 +9,5 @@ dependencies = [
     "flask-login==0.6.3",
     "flask-sqlalchemy==3.1.1",
     "flask-wtf==1.2.1",
+    "pytest==7.4.3",
 ]
