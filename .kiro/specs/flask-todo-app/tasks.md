@@ -24,7 +24,7 @@
     - Set up security headers and CSRF protection
     - _Requirements: 6.5, 5.1, 5.3_
 
-  - [ ] 2.2 Implement User and Todo database models in app/models.py
+  - [x] 2.2 Implement User and Todo database models in app/models.py
     - Create User class with id, username, password_hash, and created_at fields
     - Implement UserMixin for Flask-Login integration
     - Create Todo class with user_id foreign key relationship
