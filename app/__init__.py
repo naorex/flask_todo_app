@@ -128,8 +128,13 @@ def init_database(app):
             # Set proper file permissions for SQLite database
             if db_uri.startswith("sqlite:///"):
                 if os.path.exists(db_path):
-                    os.chmod(db_path, 0o600)  # Read/write for owner only
-                    app.logger.info(f"Set database file permissions: {db_path}")
+                    try:
+                        os.chmod(db_path, 0o600)  # Read/write for owner only
+                        app.logger.info(f"Set database file permissions: {db_path}")
+                    except (OSError, PermissionError) as e:
+                        app.logger.warning(
+                            f"Could not set database file permissions ({e}), continuing anyway"
+                        )
 
         except Exception as e:
             app.logger.error(f"Database initialization failed: {e}")
@@ -142,23 +147,37 @@ def configure_logging(app):
     from logging.handlers import RotatingFileHandler
 
     if not app.debug and not app.testing:
-        # Create logs directory if it doesn't exist
+        # Try to configure file logging, fall back to console if it fails
         import os
 
-        if not os.path.exists("logs"):
-            os.mkdir("logs")
+        try:
+            # Create logs directory if it doesn't exist
+            if not os.path.exists("logs"):
+                os.makedirs("logs", mode=0o755, exist_ok=True)
 
-        # Configure file handler with rotation
-        file_handler = RotatingFileHandler(
-            "logs/todo_app.log", maxBytes=10240000, backupCount=10  # 10MB
-        )
-        file_handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
+            # Configure file handler with rotation
+            file_handler = RotatingFileHandler(
+                "logs/todo_app.log", maxBytes=10240000, backupCount=10  # 10MB
             )
-        )
-        file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
+            file_handler.setFormatter(
+                logging.Formatter(
+                    "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
+                )
+            )
+            file_handler.setLevel(logging.INFO)
+            app.logger.addHandler(file_handler)
+            app.logger.info("File logging configured successfully")
+        except (OSError, PermissionError) as e:
+            # Fall back to console logging if file logging fails
+            console_handler = logging.StreamHandler()
+            console_handler.setFormatter(
+                logging.Formatter(
+                    "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
+                )
+            )
+            console_handler.setLevel(logging.INFO)
+            app.logger.addHandler(console_handler)
+            app.logger.warning(f"File logging failed ({e}), using console logging")
 
         app.logger.setLevel(logging.INFO)
         app.logger.info("Todo App startup")

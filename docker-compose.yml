@@ -16,8 +16,9 @@ services:
       - FLASK_APP=app.py
       - FLASK_ENV=production
       - SECRET_KEY=your-secret-key-change-in-production
-      - DATABASE_URL=sqlite:///instance/todo.db
+      - DATABASE_URL=sqlite:////app/instance/todo.db
       - PYTHONUNBUFFERED=1
+      - CONTAINER=true
     restart: unless-stopped
     # Health check for container monitoring
     healthcheck:

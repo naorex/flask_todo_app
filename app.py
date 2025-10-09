@@ -45,18 +45,12 @@ def configure_production_logging():
     """Configure logging for production environment."""
     import logging
 
-    # Set up basic logging configuration
+    # Set up basic logging configuration with console output only
+    # File logging is handled by the Flask app configuration
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]",
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            (
-                logging.FileHandler("logs/todo_app.log")
-                if os.path.exists("logs")
-                else logging.StreamHandler(sys.stdout)
-            ),
-        ],
+        handlers=[logging.StreamHandler(sys.stdout)],
     )
 
 

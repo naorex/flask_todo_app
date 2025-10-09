@@ -21,8 +21,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create instance directory for database with proper permissions
-RUN mkdir -p instance && chown -R appuser:appuser /app
+# Create instance and logs directories for database and logging with proper permissions
+RUN mkdir -p instance logs && chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
