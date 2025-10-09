@@ -131,11 +131,11 @@ graph TB
     Actor3 --> UC9
     Actor3 --> UC10
 
-    UC1 -.-> UC2 : "after registration"
-    UC2 --> UC4 : "successful login"
-    UC5 --> UC4 : "refresh list"
-    UC6 --> UC4 : "refresh list"
-    UC7 --> UC4 : "refresh list"
+    UC1 -.->|after registration| UC2
+    UC2 -->|successful login| UC4
+    UC5 -->|refresh list| UC4
+    UC6 -->|refresh list| UC4
+    UC7 -->|refresh list| UC4
 ```
 
 ## Sequence Diagrams
