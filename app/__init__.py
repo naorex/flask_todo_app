@@ -11,29 +11,18 @@ login_manager = LoginManager()
 csrf = CSRFProtect()
 
 
-def create_app():
+def create_app(config_name=None):
     """Create and configure the Flask application."""
     app = Flask(__name__)
 
-    # Configuration from environment variables
-    app.config["SECRET_KEY"] = os.environ.get(
-        "SECRET_KEY", "dev-secret-key-change-in-production"
-    )
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-        "DATABASE_URL", "sqlite:///todo.db"
-    )
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    # Load configuration
+    from app.config import get_config
 
-    # Security configurations
-    app.config["SESSION_COOKIE_SECURE"] = os.environ.get("FLASK_ENV") == "production"
-    app.config["SESSION_COOKIE_HTTPONLY"] = True
-    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-    app.config["PERMANENT_SESSION_LIFETIME"] = 3600  # 1 hour
+    if config_name is None:
+        config_name = os.environ.get("FLASK_ENV", "development")
 
-    # Additional security settings
-    app.config["WTF_CSRF_TIME_LIMIT"] = 3600  # CSRF token expires in 1 hour
-    app.config["WTF_CSRF_SSL_STRICT"] = os.environ.get("FLASK_ENV") == "production"
-    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024  # 16KB max request size
+    config_class = get_config(config_name)
+    app.config.from_object(config_class)
 
     # Initialize extensions with app
     db.init_app(app)
@@ -90,6 +79,9 @@ def create_app():
     # Register error handlers
     register_error_handlers(app)
 
+    # Initialize database
+    init_database(app)
+
     # Register blueprints
     from app.routes import auth, main
 
@@ -97,6 +89,51 @@ def create_app():
     app.register_blueprint(main)
 
     return app
+
+
+def init_database(app):
+    """Initialize database tables and constraints."""
+    with app.app_context():
+        import os
+
+        from app.migrations import migration_manager
+        from app.models import Todo, User
+
+        # Initialize migration manager
+        migration_manager.init_app(app)
+
+        # Get database file path from URI
+        db_uri = app.config["SQLALCHEMY_DATABASE_URI"]
+        if db_uri.startswith("sqlite:///"):
+            db_path = db_uri.replace("sqlite:///", "")
+            db_dir = os.path.dirname(db_path)
+
+            # Create database directory if it doesn't exist
+            if db_dir and not os.path.exists(db_dir):
+                os.makedirs(db_dir, mode=0o755)
+                app.logger.info(f"Created database directory: {db_dir}")
+
+        # Create all database tables
+        try:
+            db.create_all()
+            app.logger.info("Database tables created successfully")
+
+            # Apply any pending migrations
+            migration_manager.apply_migrations()
+
+            # Verify database constraints (only for persistent databases)
+            if not db_uri.startswith("sqlite:///:memory:"):
+                migration_manager.check_database_constraints()
+
+            # Set proper file permissions for SQLite database
+            if db_uri.startswith("sqlite:///"):
+                if os.path.exists(db_path):
+                    os.chmod(db_path, 0o600)  # Read/write for owner only
+                    app.logger.info(f"Set database file permissions: {db_path}")
+
+        except Exception as e:
+            app.logger.error(f"Database initialization failed: {e}")
+            raise
 
 
 def configure_logging(app):
