@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  flask-todo-app:
+    build: .
+    container_name: flask-todo-app
+    ports:
+      - '5000:5000'
+    volumes:
+      # Volume mounting for database persistence
+      - ./instance:/app/instance
+      # Mount static files for development
+      - ./static:/app/static
+    environment:
+      # Configure environment variables for authentication
+      - FLASK_APP=app.py
+      - FLASK_ENV=production
+      - SECRET_KEY=your-secret-key-change-in-production
+      - DATABASE_URL=sqlite:///instance/todo.db
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    # Health check for container monitoring
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://localhost:5000/login', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Ensure proper file permissions for database
+    user: '1000:1000'
+
+volumes:
+  # Named volume for database persistence
+  todo_data:
+    driver: local
