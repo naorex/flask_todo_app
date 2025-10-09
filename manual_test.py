@@ -10,8 +10,8 @@ import sys
 import requests
 
 
-def test_basic_functionality():
-    """Test basic application functionality."""
+def verify_basic_functionality():
+    """Verify basic application functionality."""
     base_url = "http://localhost:5000"
 
     print("🚀 Flask Todo App Manual Verification")
@@ -134,8 +134,8 @@ def test_basic_functionality():
     return True
 
 
-def test_container_health():
-    """Test Docker container health."""
+def verify_container_health():
+    """Verify Docker container health."""
     print("\n🐳 Docker Container Health Check")
     print("=" * 40)
 
@@ -163,8 +163,8 @@ def test_container_health():
 
 
 if __name__ == "__main__":
-    success = test_basic_functionality()
-    test_container_health()
+    success = verify_basic_functionality()
+    verify_container_health()
 
     if success:
         print("\n🎉 Basic functionality verification passed!")
