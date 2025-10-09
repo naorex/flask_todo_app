@@ -13,7 +13,8 @@ csrf = CSRFProtect()
 
 def create_app(config_name=None):
     """Create and configure the Flask application."""
-    app = Flask(__name__)
+    # Explicitly set static folder path for container compatibility
+    app = Flask(__name__, static_folder="../static", static_url_path="/static")
 
     # Load configuration
     from app.config import get_config
