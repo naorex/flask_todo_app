@@ -81,15 +81,15 @@ classDiagram
         +check_database_constraints()
     }
 
-    User ||--o{ Todo : "owns"
-    Flask --> User : "manages"
-    Flask --> Todo : "manages"
-    Flask --> AuthService : "uses"
-    Flask --> SecurityService : "uses"
-    Flask --> ConfigManager : "uses"
-    Flask --> MigrationManager : "uses"
-    AuthService --> User : "authenticates"
-    AuthService --> SecurityService : "validates"
+    User *-- Todo
+    Flask o-- User
+    Flask o-- Todo
+    Flask o-- AuthService
+    Flask o-- SecurityService
+    Flask o-- ConfigManager
+    Flask o-- MigrationManager
+    AuthService -- User
+    AuthService -- SecurityService
 ```
 
 ## Use Case Diagram
