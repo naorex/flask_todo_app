@@ -483,3 +483,124 @@ flowchart TD
     class PROCESS,RESPONSE success
     class REDIRECT,LOGIN,ERROR,FORBIDDEN error
 ```
+
+## MIGRATION_VERSION Table Documentation
+
+### Purpose of the MIGRATION_VERSION Table
+
+The `MIGRATION_VERSION` table serves as a **database schema version control system**. Here's what it does:
+
+#### 🎯 Primary Functions:
+
+1. **Schema Version Tracking**
+   - Keeps track of which database schema version is currently applied
+   - Stores the version number, when it was applied, and a description
+
+2. **Migration State Management**
+   - Prevents running the same migration multiple times
+   - Ensures migrations are applied in the correct order
+   - Allows the system to know what changes have already been made
+
+3. **Deployment Safety**
+   - When deploying to different environments (dev, staging, production), the system can automatically determine what migrations need to be run
+   - Prevents schema inconsistencies between environments
+
+#### 📊 Table Structure:
+
+```sql
+CREATE TABLE migration_version (
+    id INTEGER PRIMARY KEY,
+    version INTEGER NOT NULL,        -- Schema version number (1, 2, 3, etc.)
+    applied_at DATETIME NOT NULL,    -- When this migration was applied
+    description TEXT                 -- Human-readable description of changes
+)
+```
+
+#### 🔄 How It Works:
+
+1. **Initial Setup**: When the app starts for the first time, it creates the table and records version 1 (initial schema)
+
+2. **Version Checking**:
+
+   ```python
+   current_version = self.get_db_version()  # Reads MAX(version) from table
+   target_version = self.get_target_version()  # What version the app expects
+   ```
+
+3. **Migration Application**: If current < target, it applies missing migrations sequentially
+
+4. **Recording**: Each successful migration is recorded in the table
+
+#### 🚀 Real-World Example:
+
+Let's say you want to add a new feature that requires database changes:
+
+**Version 1** (Current):
+
+- User table: id, username, password_hash, created_at
+- Todo table: id, description, completed, created_at, user_id
+
+**Version 2** (New Feature - Todo Categories):
+
+- Add `category` column to Todo table
+- Add `Category` table
+
+The migration system would:
+
+1. Check current version (1) vs target version (2)
+2. Apply migration v2: Add category column and Category table
+3. Record in migration_version: `(2, '2024-01-15 10:30:00', 'Added todo categories')`
+
+#### 💡 Benefits:
+
+- **Automated Deployments**: No manual database changes needed
+- **Rollback Safety**: You know exactly what version you're on
+- **Team Collaboration**: Everyone gets the same database structure
+- **Environment Consistency**: Dev, staging, and production stay in sync
+- **Audit Trail**: Complete history of database changes
+
+#### 🔍 In Your App:
+
+Currently, your app only has version 1 (initial schema), but the infrastructure is ready for future changes. When you need to modify the database schema, you would:
+
+1. Increment `get_target_version()` to return 2
+2. Add a new condition in `apply_migration()` for version 2
+3. Deploy - the system automatically applies the new migration
+
+This is a lightweight alternative to more complex migration systems like Alembic (used with Flask-Migrate), but serves the same fundamental purpose of keeping database schemas synchronized and versioned.
+
+#### Migration Flow Diagram
+
+```mermaid
+flowchart TD
+    START([App Startup]) --> CHECK{Migration Table Exists?}
+
+    CHECK -->|No| CREATE[Create migration_version table]
+    CREATE --> RECORD1[Record Version 1 - Initial Schema]
+    RECORD1 --> CURRENT
+
+    CHECK -->|Yes| CURRENT[Get Current Version from DB]
+
+    CURRENT --> TARGET[Get Target Version from Code]
+    TARGET --> COMPARE{Current < Target?}
+
+    COMPARE -->|No| DONE[✅ Database Up to Date]
+    COMPARE -->|Yes| MIGRATE[Apply Missing Migrations]
+
+    MIGRATE --> APPLY[Apply Migration N+1]
+    APPLY --> RECORD[Record Migration in Table]
+    RECORD --> NEXT{More Migrations?}
+
+    NEXT -->|Yes| APPLY
+    NEXT -->|No| DONE
+
+    DONE --> CONTINUE[Continue App Startup]
+
+    classDef success fill:#e8f5e8
+    classDef process fill:#e3f2fd
+    classDef decision fill:#fff3e0
+
+    class DONE,CONTINUE success
+    class CREATE,RECORD1,CURRENT,TARGET,MIGRATE,APPLY,RECORD process
+    class CHECK,COMPARE,NEXT decision
+```
