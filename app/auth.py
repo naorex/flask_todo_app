@@ -2,11 +2,12 @@
 
 from functools import wraps
 
-from flask import current_app, flash, redirect, url_for
+from flask import current_app, flash, redirect, request, url_for
 from flask_login import current_user
 
 from app import db
 from app.models import User
+from app.security import log_security_event, sanitize_input
 
 
 def load_user(user_id):
@@ -42,11 +43,21 @@ def authenticate_user(username, password):
     if not username or not password:
         return None
 
+    # Sanitize username input
+    username = sanitize_input(username, max_length=80)
+
     # Find user by username (case-insensitive)
-    user = User.query.filter(User.username.ilike(username.strip())).first()
+    user = User.query.filter(User.username.ilike(username)).first()
 
     if user and user.check_password(password):
+        # Log successful authentication
+        log_security_event("login_success", {"username": username}, user.id)
         return user
+    else:
+        # Log failed authentication attempt
+        log_security_event(
+            "login_failed", {"username": username, "ip": request.remote_addr}
+        )
 
     return None
 
@@ -64,13 +75,20 @@ def create_user(username, password, password_confirm=None):
         tuple: (User object or None, error message or None)
     """
     try:
+        # Sanitize username input
+        username = sanitize_input(username, max_length=80)
+
         # Validate password confirmation if provided
         if password_confirm is not None and password != password_confirm:
             return None, "Passwords do not match"
 
         # Check if username already exists (case-insensitive)
-        existing_user = User.query.filter(User.username.ilike(username.strip())).first()
+        existing_user = User.query.filter(User.username.ilike(username)).first()
         if existing_user:
+            log_security_event(
+                "registration_failed",
+                {"username": username, "reason": "username_exists"},
+            )
             return None, "Username already exists"
 
         # Create new user (User.__init__ handles validation)
@@ -80,15 +98,24 @@ def create_user(username, password, password_confirm=None):
         db.session.add(user)
         db.session.commit()
 
+        # Log successful registration
+        log_security_event("registration_success", {"username": username}, user.id)
         return user, None
 
     except ValueError as e:
         # Handle validation errors from User model
+        log_security_event(
+            "registration_failed",
+            {"username": username, "reason": "validation_error", "error": str(e)},
+        )
         return None, str(e)
     except Exception as e:
         # Handle database errors
         db.session.rollback()
         current_app.logger.error(f"Error creating user: {e}")
+        log_security_event(
+            "registration_failed", {"username": username, "reason": "database_error"}
+        )
         return None, "An error occurred while creating the account"
 
 

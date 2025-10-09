@@ -16,6 +16,7 @@ from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, EqualTo, Length
 
 from app.auth import authenticate_user, create_user
+from app.security import log_security_event, sanitize_todo_description
 
 
 def validate_csrf_token():
@@ -150,10 +151,19 @@ def logout():
 
     POST: End user session and redirect to login page
     """
-    username = current_user.username
-    logout_user()
-    flash(f"You have been logged out, {username}.", "info")
-    return redirect(url_for("auth.login"))
+    try:
+        username = current_user.username
+        user_id = current_user.id
+        logout_user()
+
+        # Log successful logout
+        log_security_event("logout_success", {"username": username}, user_id)
+        flash(f"You have been logged out, {username}.", "info")
+        return redirect(url_for("auth.login"))
+    except Exception as e:
+        current_app.logger.error(f"Error during logout: {e}")
+        flash("An error occurred during logout. Please try again.", "error")
+        return redirect(url_for("main.index"))
 
 
 # Create blueprint for main application routes
@@ -171,14 +181,19 @@ def index():
     """
     from app.models import Todo
 
-    # Query only current user's todos, ordered by creation date (newest first)
-    user_todos = (
-        Todo.query.filter_by(user_id=current_user.id)
-        .order_by(Todo.created_at.desc())
-        .all()
-    )
+    try:
+        # Query only current user's todos, ordered by creation date (newest first)
+        user_todos = (
+            Todo.query.filter_by(user_id=current_user.id)
+            .order_by(Todo.created_at.desc())
+            .all()
+        )
 
-    return render_template("index.html", todos=user_todos)
+        return render_template("index.html", todos=user_todos)
+    except Exception as e:
+        current_app.logger.error(f"Error loading todos for user {current_user.id}: {e}")
+        flash("An error occurred while loading your todos. Please try again.", "error")
+        return render_template("index.html", todos=[])
 
 
 @main.route("/add", methods=["POST"])
@@ -197,8 +212,8 @@ def add_todo():
     if not validate_csrf_token():
         return redirect(url_for("main.index"))
 
-    # Get todo description from form
-    description = request.form.get("description", "").strip()
+    # Get and sanitize todo description from form
+    description = sanitize_todo_description(request.form.get("description", ""))
 
     # Validate input
     if not description:
@@ -211,11 +226,18 @@ def add_todo():
         db.session.add(new_todo)
         db.session.commit()
 
+        current_app.logger.info(
+            f"User {current_user.id} added new todo: '{description[:50]}{'...' if len(description) > 50 else ''}'"
+        )
         flash("Todo added successfully!", "success")
     except ValueError as e:
+        current_app.logger.warning(
+            f"Validation error adding todo for user {current_user.id}: {e}"
+        )
         flash(str(e), "error")
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error adding todo for user {current_user.id}: {e}")
         flash("An error occurred while adding the todo. Please try again.", "error")
 
     return redirect(url_for("main.index"))
@@ -241,18 +263,33 @@ def toggle_todo(todo_id):
     todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
 
     if not todo:
+        # Log unauthorized access attempt
+        log_security_event(
+            "unauthorized_todo_access",
+            {"todo_id": todo_id, "action": "toggle", "user_id": current_user.id},
+        )
+        current_app.logger.warning(
+            f"User {current_user.id} attempted to toggle non-existent or unauthorized todo {todo_id}"
+        )
         flash("Todo not found or you don't have permission to modify it.", "error")
         return redirect(url_for("main.index"))
 
     try:
         # Toggle completion status
+        old_status = todo.completed
         todo.toggle_completion()
         db.session.commit()
 
         status = "completed" if todo.completed else "incomplete"
+        current_app.logger.info(
+            f"User {current_user.id} toggled todo {todo_id} from {old_status} to {todo.completed}"
+        )
         flash(f"Todo marked as {status}!", "success")
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(
+            f"Error toggling todo {todo_id} for user {current_user.id}: {e}"
+        )
         flash("An error occurred while updating the todo. Please try again.", "error")
 
     return redirect(url_for("main.index"))
@@ -278,17 +315,38 @@ def delete_todo(todo_id):
     todo = Todo.query.filter_by(id=todo_id, user_id=current_user.id).first()
 
     if not todo:
+        # Log unauthorized access attempt
+        log_security_event(
+            "unauthorized_todo_access",
+            {"todo_id": todo_id, "action": "delete", "user_id": current_user.id},
+        )
+        current_app.logger.warning(
+            f"User {current_user.id} attempted to delete non-existent or unauthorized todo {todo_id}"
+        )
         flash("Todo not found or you don't have permission to delete it.", "error")
         return redirect(url_for("main.index"))
 
     try:
+        # Store todo description for logging
+        todo_description = (
+            todo.description[:50] + "..."
+            if len(todo.description) > 50
+            else todo.description
+        )
+
         # Delete the todo
         db.session.delete(todo)
         db.session.commit()
 
+        current_app.logger.info(
+            f"User {current_user.id} deleted todo {todo_id}: '{todo_description}'"
+        )
         flash("Todo deleted successfully!", "success")
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(
+            f"Error deleting todo {todo_id} for user {current_user.id}: {e}"
+        )
         flash("An error occurred while deleting the todo. Please try again.", "error")
 
     return redirect(url_for("main.index"))

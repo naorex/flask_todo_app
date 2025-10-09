@@ -1,0 +1,78 @@
+{% extends "base.html" %} {% block title %}Unauthorized - Flask Todo App{% endblock %} {% block content %}
+<div class="error-container">
+  <div class="card error-card">
+    <div class="card-body text-center">
+      <div class="error-icon">
+        <i class="fas fa-lock fa-5x text-warning"></i>
+      </div>
+
+      <h1 class="error-code">401</h1>
+      <h2 class="error-title">Unauthorized Access</h2>
+
+      <p class="error-message">You need to be logged in to access this page.</p>
+
+      <div class="error-actions">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary"> <i class="fas fa-sign-in-alt"></i> Login </a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary"> <i class="fas fa-user-plus"></i> Register </a>
+      </div>
+
+      <div class="error-help">
+        <small class="text-muted">
+          <i class="fas fa-question-circle"></i>
+          If you believe this is an error, please try logging in again.
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+  }
+
+  .error-card {
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .error-icon {
+    margin-bottom: 1rem;
+  }
+
+  .error-code {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #ffc107;
+    margin-bottom: 0.5rem;
+  }
+
+  .error-title {
+    color: #495057;
+    margin-bottom: 1rem;
+  }
+
+  .error-message {
+    color: #6c757d;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+  }
+
+  .error-actions {
+    margin-bottom: 2rem;
+  }
+
+  .error-actions .btn {
+    margin: 0 0.5rem;
+  }
+
+  .error-help {
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+  }
+</style>
+{% endblock %}

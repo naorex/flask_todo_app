@@ -1,0 +1,82 @@
+{% extends "base.html" %} {% block title %}Server Error - Flask Todo App{% endblock %} {% block content %}
+<div class="error-container">
+  <div class="card error-card">
+    <div class="card-body text-center">
+      <div class="error-icon">
+        <i class="fas fa-exclamation-triangle fa-5x text-danger"></i>
+      </div>
+
+      <h1 class="error-code">500</h1>
+      <h2 class="error-title">Internal Server Error</h2>
+
+      <p class="error-message">Something went wrong on our end. We're working to fix this issue.</p>
+
+      <div class="error-actions">
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary"> <i class="fas fa-home"></i> Go to Todos </a>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary"> <i class="fas fa-sign-in-alt"></i> Login </a>
+        {% endif %}
+        <button onclick="location.reload()" class="btn btn-outline-secondary"><i class="fas fa-redo"></i> Try Again</button>
+      </div>
+
+      <div class="error-help">
+        <small class="text-muted">
+          <i class="fas fa-info-circle"></i>
+          If this problem persists, please try again later or contact support.
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+  }
+
+  .error-card {
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .error-icon {
+    margin-bottom: 1rem;
+  }
+
+  .error-code {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #dc3545;
+    margin-bottom: 0.5rem;
+  }
+
+  .error-title {
+    color: #495057;
+    margin-bottom: 1rem;
+  }
+
+  .error-message {
+    color: #6c757d;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+  }
+
+  .error-actions {
+    margin-bottom: 2rem;
+  }
+
+  .error-actions .btn {
+    margin: 0 0.5rem;
+  }
+
+  .error-help {
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+  }
+</style>
+{% endblock %}
